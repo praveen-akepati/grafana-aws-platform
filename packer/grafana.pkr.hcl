@@ -4,10 +4,6 @@ packer {
       version = ">= 1.3.0"
       source  = "github.com/hashicorp/amazon"
     }
-    ansible = {
-      version = ">= 1.1.0"
-      source  = "github.com/hashicorp/ansible"
-    }
   }
 }
 
@@ -52,7 +48,8 @@ build {
   sources = ["source.amazon-ebs.grafana"]
 
   provisioner "shell" {
-    script = "scripts/install-grafana.sh"
+    script          = "scripts/install-grafana.sh"
+    execute_command = "sudo -E bash '{{.Path}}'"
   }
 
   provisioner "file" {
@@ -64,13 +61,6 @@ build {
     inline = [
       "sudo mv /tmp/ansible /opt/grafana-platform/ansible",
       "sudo chown -R root:root /opt/grafana-platform/ansible",
-    ]
-  }
-
-  provisioner "ansible" {
-    playbook_file = "../ansible/playbooks/base-grafana.yml"
-    extra_arguments = [
-      "--extra-vars", "ansible_python_interpreter=/usr/bin/python3",
     ]
   }
 }

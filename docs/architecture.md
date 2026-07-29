@@ -18,7 +18,7 @@ Users → Route 53 → ALB (HTTPS:443) → Grafana EC2 (:3000) → RDS PostgreSQ
 | RDS PostgreSQL Multi-AZ | Terraform |
 | Secrets Manager | Terraform |
 | CloudWatch alarms, S3 logs | Terraform |
-| Grafana package + CloudWatch agent | Packer |
+| Grafana package + CloudWatch agent | Packer (shell install; Ansible on EC2 at launch) |
 | DB config, datasource, admin | Ansible |
 
 ## HA notes

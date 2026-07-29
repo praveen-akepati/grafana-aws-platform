@@ -16,6 +16,11 @@ apt-get install -y python3-pip jq awscli
 
 pip3 install ansible boto3 botocore
 
+ANSIBLE_DIR="/opt/grafana-platform/ansible"
+if [ -f "$ANSIBLE_DIR/requirements.yml" ]; then
+  ansible-galaxy collection install -r "$ANSIBLE_DIR/requirements.yml"
+fi
+
 mkdir -p /opt/grafana-bootstrap
 cat > /opt/grafana-bootstrap/extra-vars.json <<EOF
 {

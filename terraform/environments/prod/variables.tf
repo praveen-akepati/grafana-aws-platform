@@ -17,13 +17,23 @@ variable "environment" {
 }
 
 variable "domain_name" {
-  description = "FQDN for Grafana (e.g. grafana.example.com)"
+  description = "FQDN for Grafana (e.g. grafana.example.com). Required when use_custom_domain is true."
   type        = string
+  default     = null
+  nullable    = true
 }
 
 variable "hosted_zone_id" {
-  description = "Route 53 hosted zone ID for domain_name"
+  description = "Route 53 hosted zone ID for domain_name. Required when use_custom_domain is true."
   type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "use_custom_domain" {
+  description = "When true (production), Route 53 + ACM HTTPS on your domain. When false, ALB DNS over HTTP only (POC / no domain)."
+  type        = bool
+  default     = true
 }
 
 variable "vpc_cidr" {

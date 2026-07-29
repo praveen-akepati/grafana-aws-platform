@@ -2,8 +2,13 @@ aws_region   = "ap-south-1"
 project_name = "grafana-platform"
 environment  = "prod"
 
-domain_name    = "grafana.example.com"
-hosted_zone_id = "Z0123456789ABCDEFGHIJ"
+# Production: custom domain + HTTPS (default).
+use_custom_domain = true
+domain_name       = "grafana.example.com"
+hosted_zone_id    = "Z0123456789ABCDEFGHIJ"
+
+# POC without a domain: set use_custom_domain = false (no Route 53 / ACM).
+# See branch cursor/poc-alb-dns-no-domain for local Prometheus + ngrok walkthrough.
 
 # Set after: packer build -var region=ap-south-1
 grafana_ami_id = "ami-0123456789abcdef0"
@@ -16,4 +21,4 @@ allowed_ingress_cidrs = ["203.0.113.0/24"]
 prometheus_url = "https://prometheus.client.example.com"
 
 # POC / personal test: true (clean terraform destroy). Work production: false.
-poc_mode = true
+poc_mode = false

@@ -56,6 +56,8 @@
     ds_url: "{{ prometheus_url }}"
     access: proxy
     is_default: true
+    json_data: "{{ {'httpHeaderName1': 'ngrok-skip-browser-warning'} if ('ngrok' in prometheus_url) else omit }}"
+    secure_json_data: "{{ {'httpHeaderValue1': 'true'} if ('ngrok' in prometheus_url) else omit }}"
   when:
     - prometheus_url is defined
     - prometheus_url | length > 0

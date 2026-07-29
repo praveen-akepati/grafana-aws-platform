@@ -1,11 +1,22 @@
 variable "name_prefix" { type = string }
 variable "vpc_id" { type = string }
 variable "public_subnet_ids" { type = list(string) }
-variable "certificate_arn" { type = string }
 variable "allowed_ingress_cidrs" { type = list(string) }
 variable "access_logs_bucket" {
   type    = string
   default = null
+}
+
+variable "enable_https" {
+  description = "HTTPS listener with ACM certificate. When false, HTTP only (POC without custom domain)."
+  type        = bool
+  default     = true
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN; required when enable_https is true."
+  type        = string
+  default     = null
 }
 
 resource "aws_security_group" "alb" {
@@ -13,16 +24,19 @@ resource "aws_security_group" "alb" {
   description = "Application Load Balancer"
   vpc_id      = var.vpc_id
 
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_ingress_cidrs
+  dynamic "ingress" {
+    for_each = var.enable_https ? [1] : []
+    content {
+      description = "HTTPS"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = var.allowed_ingress_cidrs
+    }
   }
 
   ingress {
-    description = "HTTP redirect"
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -81,6 +95,8 @@ resource "aws_lb_target_group" "grafana" {
 }
 
 resource "aws_lb_listener" "https" {
+  count = var.enable_https ? 1 : 0
+
   load_balancer_arn = aws_lb.this.arn
   port              = 443
   protocol          = "HTTPS"
@@ -94,6 +110,8 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_lb_listener" "http_redirect" {
+  count = var.enable_https ? 1 : 0
+
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"
@@ -105,6 +123,19 @@ resource "aws_lb_listener" "http_redirect" {
       protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
+  }
+}
+
+resource "aws_lb_listener" "http_forward" {
+  count = var.enable_https ? 0 : 1
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana.arn
   }
 }
 
@@ -130,4 +161,9 @@ output "target_group_arn_suffix" {
 
 output "security_group_id" {
   value = aws_security_group.alb.id
+}
+
+output "grafana_url" {
+  description = "URL to open Grafana in a browser"
+  value       = var.enable_https ? "https://${aws_lb.this.dns_name}" : "http://${aws_lb.this.dns_name}"
 }

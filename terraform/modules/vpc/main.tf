@@ -111,7 +111,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_flow_log" "vpc" {
-  count = var.enable_flow_logs && var.flow_logs_bucket_arn != null ? 1 : 0
+  count = var.enable_flow_logs ? 1 : 0
 
   log_destination      = var.flow_logs_bucket_arn
   log_destination_type = "s3"
