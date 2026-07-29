@@ -1,0 +1,61 @@
+---
+- name: Skip runtime configuration during Packer base build
+  ansible.builtin.meta: end_play
+  when: not grafana_configure_runtime | default(false)
+
+- name: Load secrets from AWS Secrets Manager
+  ansible.builtin.set_fact:
+    grafana_secrets: "{{ lookup('amazon.aws.aws_secret', grafana_secrets_arn, region=aws_region) | from_json }}"
+  when: grafana_secrets_arn is defined
+
+- name: Merge secret values into role variables
+  ansible.builtin.set_fact:
+    grafana_admin_user: "{{ grafana_secrets.grafana_admin_user }}"
+    grafana_admin_password: "{{ grafana_secrets.grafana_admin_password }}"
+    grafana_rds_user: "{{ grafana_secrets.rds_username }}"
+    grafana_rds_password: "{{ grafana_secrets.rds_password }}"
+    prometheus_url: "{{ prometheus_url | default(grafana_secrets.prometheus_url, true) }}"
+  when: grafana_secrets is defined
+
+- name: Derive Grafana domain from root URL
+  ansible.builtin.set_fact:
+    grafana_domain: "{{ grafana_root_url | regex_replace('^https?://', '') | regex_replace('/.*$', '') }}"
+  when: grafana_root_url is defined
+
+- name: Render Grafana configuration
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Ensure Grafana is started
+  ansible.builtin.service:
+    name: grafana-server
+    state: started
+    enabled: true
+
+- name: Wait for Grafana health endpoint
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/api/health
+    status_code: 200
+  register: grafana_health
+  until: grafana_health.status == 200
+  retries: 12
+  delay: 5
+
+- name: Configure Prometheus datasource
+  community.grafana.grafana_datasource:
+    name: Client Prometheus
+    grafana_url: http://127.0.0.1:3000
+    grafana_user: "{{ grafana_admin_user }}"
+    grafana_password: "{{ grafana_admin_password }}"
+    ds_type: prometheus
+    ds_url: "{{ prometheus_url }}"
+    access: proxy
+    is_default: true
+  when:
+    - prometheus_url is defined
+    - prometheus_url | length > 0

@@ -1,0 +1,9 @@
+---
+- name: Configure Grafana at runtime
+  hosts: localhost
+  connection: local
+  become: true
+  roles:
+    - role: grafana
+      vars:
+        grafana_configure_runtime: true

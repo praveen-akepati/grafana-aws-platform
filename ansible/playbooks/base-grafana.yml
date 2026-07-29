@@ -1,0 +1,8 @@
+---
+- name: Base Grafana image (Packer)
+  hosts: all
+  become: true
+  roles:
+    - role: grafana
+      vars:
+        grafana_configure_runtime: false
