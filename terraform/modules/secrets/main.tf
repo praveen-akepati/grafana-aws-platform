@@ -13,7 +13,7 @@ resource "random_password" "rds" {
 
 resource "random_password" "grafana_admin" {
   length  = 24
-  special = true
+  special = false
 }
 
 resource "aws_secretsmanager_secret" "grafana_config" {

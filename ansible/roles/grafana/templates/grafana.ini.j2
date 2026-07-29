@@ -3,7 +3,7 @@ protocol = http
 http_addr = 0.0.0.0
 http_port = 3000
 domain = {{ grafana_domain }}
-root_url = {{ grafana_root_url }}
+root_url = {{ grafana_root_url | regex_replace('/$', '') }}/
 enforce_domain = false
 
 [database]
@@ -18,6 +18,7 @@ ssl_mode = {{ grafana_rds_ssl_mode }}
 admin_user = {{ grafana_admin_user }}
 admin_password = {{ grafana_admin_password }}
 disable_gravatar = true
+cookie_secure = {{ 'false' if (grafana_root_url | regex_search('^https?://')) and (grafana_root_url is match('^http://')) else 'true' }}
 
 [users]
 allow_sign_up = false

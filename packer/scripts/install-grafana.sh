@@ -36,8 +36,8 @@ echo "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com st
 apt-get update -y
 apt-get install -y grafana
 
-systemctl enable grafana-server
+systemctl disable grafana-server
 
-pip3 install boto3 botocore
+pip3 install ansible boto3 botocore
 
 mkdir -p /opt/grafana-platform
