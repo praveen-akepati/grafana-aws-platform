@@ -14,3 +14,6 @@ instance_type = "t3.medium"
 allowed_ingress_cidrs = ["203.0.113.0/24"]
 
 prometheus_url = "https://prometheus.client.example.com"
+
+# POC / personal test: true (clean terraform destroy). Work production: false.
+poc_mode = true

@@ -1,7 +1,14 @@
 variable "name_prefix" { type = string }
 
+variable "force_destroy" {
+  description = "Allow Terraform to delete the bucket even when it contains objects (use for POC teardown)."
+  type        = bool
+  default     = false
+}
+
 resource "aws_s3_bucket" "logs" {
   bucket_prefix = "${var.name_prefix}-logs-"
+  force_destroy = var.force_destroy
 }
 
 resource "aws_s3_bucket_public_access_block" "logs" {

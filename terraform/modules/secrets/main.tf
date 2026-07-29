@@ -1,5 +1,11 @@
 variable "name_prefix" { type = string }
 
+variable "poc_mode" {
+  description = "When true, delete secrets immediately on destroy (no recovery window)."
+  type        = bool
+  default     = false
+}
+
 resource "random_password" "rds" {
   length  = 32
   special = false
@@ -14,7 +20,7 @@ resource "aws_secretsmanager_secret" "grafana_config" {
   name_prefix = "${var.name_prefix}-grafana-config-"
   description = "Grafana and RDS configuration for Ansible/runtime"
 
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.poc_mode ? 0 : 7
 }
 
 resource "aws_secretsmanager_secret_version" "grafana_config" {

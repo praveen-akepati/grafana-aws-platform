@@ -100,3 +100,9 @@ variable "ansible_repo_url" {
   type        = string
   default     = ""
 }
+
+variable "poc_mode" {
+  description = "POC/sandbox: RDS destroy without protection or final snapshot, S3 force_destroy, secrets delete immediately. Set false for real production."
+  type        = bool
+  default     = true
+}

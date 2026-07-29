@@ -19,6 +19,23 @@ aws autoscaling set-desired-capacity \
   --desired-capacity 3
 ```
 
+## Tear down (POC)
+
+With `poc_mode = true` in `terraform.tfvars` (default in the example file):
+
+- RDS: no deletion protection, no final snapshot, backups disabled (`backup_retention_period = 0`)
+- Logs S3 bucket: `force_destroy` so objects do not block destroy
+- Secrets Manager: immediate delete (`recovery_window_in_days = 0`)
+
+```bash
+cd terraform/environments/prod
+terraform destroy
+```
+
+After destroy, confirm in the AWS console that EC2, RDS, NAT Gateway, ALB, and VPC are gone. Route 53 records and ACM certs created by this stack are removed with Terraform; **hosted zones and domains you own elsewhere are not deleted.**
+
+For **work production**, set `poc_mode = false` before apply so RDS protection, snapshots, and secret recovery match prod policy.
+
 ## Common checks
 
 | Symptom | Check |

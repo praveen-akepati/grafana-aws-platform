@@ -32,7 +32,8 @@ locals {
 module "logging" {
   source = "../../modules/logging"
 
-  name_prefix = local.name_prefix
+  name_prefix   = local.name_prefix
+  force_destroy = var.poc_mode
 }
 
 module "vpc" {
@@ -48,6 +49,7 @@ module "secrets" {
   source = "../../modules/secrets"
 
   name_prefix = local.name_prefix
+  poc_mode    = var.poc_mode
 }
 
 module "dns" {
@@ -87,9 +89,10 @@ module "rds" {
   grafana_security_group_id = module.security.grafana_security_group_id
   instance_class            = var.rds_instance_class
   allocated_storage         = var.rds_allocated_storage
-  backup_retention_days     = var.rds_backup_retention_days
+  backup_retention_days     = var.poc_mode ? 0 : var.rds_backup_retention_days
   master_username           = module.secrets.rds_username
   master_password           = module.secrets.rds_password
+  poc_mode                  = var.poc_mode
 }
 
 module "asg" {

@@ -75,6 +75,12 @@ ansible-playbook playbooks/configure-grafana.yml -i inventory/aws_ec2.yml \
 - ASG CPU target tracking (min 2 / max 5)
 - User data runs Ansible from AMI on scale-out
 
+For **work production**, set `poc_mode = false` in `terraform.tfvars` before apply (enables RDS deletion protection, final snapshot, backups, and secret recovery window).
+
+## Tear down (POC)
+
+With `poc_mode = true`, `terraform destroy` in `terraform/environments/prod` removes the stack without leaving RDS snapshots or a protected database. See `docs/runbook.md`.
+
 ## Client open items
 
 Before go-live, confirm with the client:

@@ -11,6 +11,12 @@ variable "master_password" {
   sensitive = true
 }
 
+variable "poc_mode" {
+  description = "When true, allow destroy without final snapshot or deletion protection."
+  type        = bool
+  default     = false
+}
+
 resource "aws_db_subnet_group" "this" {
   name_prefix = "${var.name_prefix}-"
   subnet_ids  = var.private_subnet_ids
@@ -63,10 +69,10 @@ resource "aws_db_instance" "this" {
   vpc_security_group_ids = [aws_security_group.rds.id]
 
   backup_retention_period = var.backup_retention_days
-  skip_final_snapshot       = false
-  final_snapshot_identifier = "${var.name_prefix}-final-snapshot"
+  skip_final_snapshot     = var.poc_mode
+  final_snapshot_identifier = var.poc_mode ? null : "${var.name_prefix}-final-snapshot"
 
-  deletion_protection = true
+  deletion_protection = !var.poc_mode
 
   tags = {
     Name = "${var.name_prefix}-rds"
