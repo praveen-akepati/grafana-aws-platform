@@ -2,7 +2,7 @@
 
 ## Deploy new AMI
 
-1. `packer build` in `packer/`
+1. `packer build` in WSL — see `docs/packer-build-wsl.md`
 2. Update `grafana_ami_id` in `terraform.tfvars`
 3. `terraform apply` — ASG rolling refresh via launch template version
 

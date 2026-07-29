@@ -53,15 +53,15 @@ Pick one tool and install it **before** deploy day.
 
 ## 3. Verify AWS can reach you (before paying for full stack)
 
-From any external network check (or a friend’s machine):
+From any external network check (or PowerShell on your PC):
 
-```bash
-curl -s "https://YOUR-TUNNEL-URL/api/v1/query?query=up" | head
+```powershell
+Invoke-WebRequest -Uri "https://YOUR-TUNNEL-URL/api/v1/query?query=up" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
 ```
 
-You should see JSON with `"status":"success"`.
+You should see JSON with `"status":"success"` in the content. Without the header, ngrok free tier returns a browser warning page (`ERR_NGROK_6024`) instead of Prometheus JSON.
 
-Grafana uses the same path (`/api/v1/...`) via **proxy** mode.
+Grafana uses the same path (`/api/v1/...`) via **proxy** mode. The Ansible role adds the ngrok skip header when `prometheus_url` contains `ngrok`.
 
 ## 4. Windows firewall
 

@@ -12,25 +12,33 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
 | `packer/` | Build Grafana base AMI (includes baked-in Ansible) |
 | `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture and runbook |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus |
 
 ## Prerequisites
 
 - AWS CLI configured with appropriate credentials
 - Terraform >= 1.5
 - Packer >= 1.9
-- Ansible >= 2.14 (`ansible-galaxy collection install -r ansible/requirements.yml`)
+- Ansible collections in **WSL** (for optional manual `configure-grafana.yml`; EC2 bootstrap uses Ansible on the instance)
+
+See `docs/setup-windows-tools.md` and `docs/local-prometheus-before-aws.md` before deploy.
 
 ## Deploy order
+
+### 0. Local Prometheus + ngrok (POC)
+
+See `docs/local-prometheus-before-aws.md`. Confirm tunnel with `ngrok-skip-browser-warning` header if using ngrok free tier.
 
 ### 1. Bootstrap remote state (once per org)
 
 See `terraform/backend.tf.example` for S3 + DynamoDB setup.
 
-### 2. Build AMI
+### 2. Build AMI (WSL)
+
+See `docs/packer-build-wsl.md`.
 
 ```bash
-cd packer
+cd /mnt/c/Users/USER/grafana-aws-platform/packer
 packer init grafana.pkr.hcl
 packer build -var region=ap-south-1 grafana.pkr.hcl
 ```
