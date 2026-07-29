@@ -41,7 +41,8 @@ Note the output AMI ID.
 
 ```bash
 cp terraform/environments/prod/terraform.tfvars.example terraform/environments/prod/terraform.tfvars
-# Edit domain, hosted zone, AMI ID, allowed_ingress_cidrs, prometheus_url
+# Edit grafana_ami_id and allowed_ingress_cidrs (your public IP /32)
+# POC default: use_custom_domain = false (no domain or Route 53 required)
 ```
 
 ### 4. Apply infrastructure

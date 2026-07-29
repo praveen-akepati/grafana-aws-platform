@@ -2,18 +2,23 @@ aws_region   = "ap-south-1"
 project_name = "grafana-platform"
 environment  = "prod"
 
-domain_name    = "grafana.example.com"
-hosted_zone_id = "Z0123456789ABCDEFGHIJ"
+# POC without a domain: ALB DNS + HTTP (no Route 53 / ACM).
+use_custom_domain = false
+
+# When use_custom_domain = true, set both:
+# domain_name    = "grafana.example.com"
+# hosted_zone_id = "Z0123456789ABCDEFGHIJ"
 
 # Set after: packer build -var region=ap-south-1
 grafana_ami_id = "ami-0123456789abcdef0"
 
 instance_type = "t3.medium"
 
-# Restrict ALB to client networks when known
-allowed_ingress_cidrs = ["203.0.113.0/24"]
+# Your public IP /32 so only you can reach the ALB (update if your ISP changes your IP)
+allowed_ingress_cidrs = ["49.43.218.88/32"]
 
-prometheus_url = "https://prometheus.client.example.com"
+# Optional; leave empty until Prometheus is reachable from the VPC
+prometheus_url = ""
 
 # POC / personal test: true (clean terraform destroy). Work production: false.
 poc_mode = true

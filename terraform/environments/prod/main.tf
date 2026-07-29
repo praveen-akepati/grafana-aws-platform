@@ -27,6 +27,18 @@ provider "aws" {
 
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
+
+  grafana_root_url = var.use_custom_domain ? "https://${var.domain_name}" : "http://${module.alb.dns_name}"
+}
+
+check "custom_domain_inputs" {
+  assert {
+    condition = (
+      !var.use_custom_domain
+      || (var.domain_name != null && var.domain_name != "" && var.hosted_zone_id != null && var.hosted_zone_id != "")
+    )
+    error_message = "Set domain_name and hosted_zone_id when use_custom_domain is true."
+  }
 }
 
 module "logging" {
@@ -53,6 +65,7 @@ module "secrets" {
 }
 
 module "dns" {
+  count  = var.use_custom_domain ? 1 : 0
   source = "../../modules/dns"
 
   domain_name    = var.domain_name
@@ -67,7 +80,8 @@ module "alb" {
   name_prefix           = local.name_prefix
   vpc_id                = module.vpc.vpc_id
   public_subnet_ids     = module.vpc.public_subnet_ids
-  certificate_arn       = module.dns.certificate_arn
+  enable_https          = var.use_custom_domain
+  certificate_arn       = var.use_custom_domain ? module.dns[0].certificate_arn : null
   allowed_ingress_cidrs = var.allowed_ingress_cidrs
   access_logs_bucket    = var.enable_alb_access_logs ? module.logging.logs_bucket_id : null
 }
@@ -111,12 +125,13 @@ module "asg" {
   secrets_arn               = module.secrets.grafana_config_secret_arn
   rds_endpoint              = module.rds.endpoint
   rds_database_name         = module.rds.database_name
-  grafana_root_url          = "https://${var.domain_name}"
+  grafana_root_url          = local.grafana_root_url
   prometheus_url            = var.prometheus_url
   ansible_repo_url          = var.ansible_repo_url
 }
 
 module "dns_record" {
+  count  = var.use_custom_domain ? 1 : 0
   source = "../../modules/dns"
 
   domain_name    = var.domain_name
@@ -130,9 +145,9 @@ module "dns_record" {
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  name_prefix               = local.name_prefix
-  alb_arn_suffix            = module.alb.arn_suffix
-  target_group_arn_suffix   = module.alb.target_group_arn_suffix
-  rds_instance_id           = module.rds.instance_id
-  sns_topic_email           = null
+  name_prefix             = local.name_prefix
+  alb_arn_suffix          = module.alb.arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+  rds_instance_id         = module.rds.instance_id
+  sns_topic_email         = null
 }

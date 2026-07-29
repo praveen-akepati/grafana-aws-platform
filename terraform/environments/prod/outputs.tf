@@ -1,6 +1,6 @@
 output "grafana_url" {
-  description = "Grafana HTTPS URL"
-  value       = "https://${var.domain_name}"
+  description = "Grafana URL (ALB DNS for POC, or custom domain when use_custom_domain is true)"
+  value       = var.use_custom_domain ? "https://${var.domain_name}" : module.alb.grafana_url
 }
 
 output "alb_dns_name" {
