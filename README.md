@@ -13,7 +13,7 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `packer/` | Build Grafana base AMI (Ansible + dashboard tree on image) |
 | `ansible/` | Configure DB, admin, Prometheus datasource, dashboard sync |
 | `grafana/dashboards/` | **Git source of truth** for dashboard JSON (`client-imported/`, `our-ops/`) |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), Grafana users, [dual Grafana model](docs/dual-grafana-model.md), [dashboard GitOps](docs/grafana-gitops.md), client Prometheus (K8s) |
+| `docs/` | **[Deploy guide](docs/deploy-guide.md)**, architecture, runbook, Windows tools, Grafana users, [dual Grafana](docs/dual-grafana-model.md), [dashboard GitOps](docs/grafana-gitops.md), client Prometheus |
 
 ## Prerequisites
 
@@ -27,6 +27,8 @@ See **`docs/setup-windows-tools.md`** for Windows + WSL install and AWS profile 
 - Client Prometheus URL **optional** — set `prometheus_url` when the client endpoint is reachable from your VPC; see **`docs/client-prometheus-kubernetes.md`**
 
 ## Deploy order
+
+**Full checklist:** **`docs/deploy-guide.md`**
 
 ### 1. Bootstrap remote state (once per org)
 

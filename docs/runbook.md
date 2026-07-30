@@ -13,6 +13,30 @@
 
 See `docs/grafana-users.md` for adding non-admin users.
 
+## Client handoff (after apply)
+
+Share with the client for VPN or firewall setup:
+
+```bash
+cd terraform/environments/prod
+terraform output vpc_cidr
+terraform output nat_gateway_public_ip
+```
+
+Prefer **VPC CIDR** over NAT IP when possible — see `docs/client-prometheus-kubernetes.md`.
+
+## Access Grafana EC2 (SSM)
+
+Instances use `AmazonSSMManagedInstanceCore`. No bastion required:
+
+```bash
+aws ec2 describe-instances --filters "Name=tag:Role,Values=grafana" "Name=instance-state-name,Values=running" \
+  --query "Reservations[].Instances[].InstanceId" --output text
+
+aws ssm start-session --target i-INSTANCE_ID
+sudo tail -100 /var/log/grafana-bootstrap.log
+```
+
 ## Scale manually
 
 ```bash
@@ -28,7 +52,7 @@ With `poc_mode = true` in `terraform.tfvars`:
 - RDS: no deletion protection, no final snapshot, backups disabled (`backup_retention_period = 0`)
 - Logs S3 bucket: `force_destroy` so objects do not block destroy
 - Secrets Manager: immediate delete (`recovery_window_in_days = 0`)
-- Terraform `lifecycle prevent_destroy` disabled on RDS, secrets, and logs bucket
+- Terraform `destroy_guard` removed when `poc_mode = true` and destroy protection is off
 
 ```bash
 cd terraform/environments/prod

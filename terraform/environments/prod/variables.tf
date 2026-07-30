@@ -123,3 +123,23 @@ variable "enable_destroy_protection" {
   default     = null
   nullable    = true
 }
+
+variable "enable_client_vpn" {
+  description = "Enable site-to-site VPN to the client network for private Prometheus access."
+  type        = bool
+  default     = false
+}
+
+variable "customer_gateway_ip" {
+  description = "Client VPN endpoint public IP. Required when enable_client_vpn is true."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "customer_network_cidr" {
+  description = "Client network CIDR reachable over VPN (e.g. 172.16.0.0/12). Required when enable_client_vpn is true."
+  type        = string
+  default     = null
+  nullable    = true
+}

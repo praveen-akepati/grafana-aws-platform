@@ -23,3 +23,8 @@ poc_mode = false
 
 # Optional override. When null, matches !poc_mode (on for production).
 # enable_destroy_protection = true
+
+# Client VPN (recommended for private Prometheus). See docs/client-prometheus-kubernetes.md
+# enable_client_vpn         = true
+# customer_gateway_ip       = "203.0.113.10"
+# customer_network_cidr     = "172.16.0.0/12"

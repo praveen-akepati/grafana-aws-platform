@@ -37,9 +37,13 @@ Grafana VPC (10.0.0.0/16) ←—— IPsec VPN ——→ Client network (e.g. 172
 
 **Your side (AWS):**
 
-1. Enable the VPN module in `terraform/environments/prod/main.tf` (`terraform/modules/vpn`).
-2. Provide the client: your **VPC CIDR**, **VPN gateway public IPs**, and (after tunnel up) traffic from **private subnet CIDRs** where Grafana runs.
-3. Add routes so private route tables send `customer_network_cidr` to the Virtual Private Gateway.
+1. Set `enable_client_vpn = true` in `terraform.tfvars` (see `terraform.tfvars.example`).
+2. After apply, share with the client:
+   ```bash
+   terraform output vpc_cidr
+   terraform output nat_gateway_public_ip   # only for HTTPS IP allowlist pilot
+   ```
+3. Add routes via the VPN module (`terraform/modules/vpn`) — wired when `enable_client_vpn` is true.
 
 **Client side:**
 

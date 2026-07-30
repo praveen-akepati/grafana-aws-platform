@@ -44,6 +44,16 @@ check "custom_domain_inputs" {
   }
 }
 
+check "client_vpn_inputs" {
+  assert {
+    condition = (
+      !var.enable_client_vpn
+      || (var.customer_gateway_ip != null && var.customer_gateway_ip != "" && var.customer_network_cidr != null && var.customer_network_cidr != "")
+    )
+    error_message = "Set customer_gateway_ip and customer_network_cidr when enable_client_vpn is true."
+  }
+}
+
 # Blocks accidental `terraform destroy` in production. Removed when destroy_protection is false.
 resource "terraform_data" "destroy_guard" {
   count = local.destroy_protection ? 1 : 0
@@ -166,4 +176,16 @@ module "monitoring" {
   target_group_arn_suffix = module.alb.target_group_arn_suffix
   rds_instance_id         = module.rds.instance_id
   sns_topic_email         = null
+}
+
+# Site-to-site VPN to client network (for private Prometheus). See docs/client-prometheus-kubernetes.md
+module "vpn" {
+  count  = var.enable_client_vpn ? 1 : 0
+  source = "../../modules/vpn"
+
+  name_prefix             = local.name_prefix
+  vpc_id                  = module.vpc.vpc_id
+  private_route_table_ids = module.vpc.private_route_table_ids
+  customer_gateway_ip     = var.customer_gateway_ip
+  customer_network_cidr   = var.customer_network_cidr
 }
