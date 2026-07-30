@@ -8,7 +8,7 @@ Users → Route 53 → ALB (HTTPS:443) → Grafana EC2 (:3000) → RDS PostgreSQ
                          Client Prometheus (K8s, client network — VPN or HTTPS)
 ```
 
-Grafana runs in **your** AWS VPC. Client Prometheus runs in **their** Kubernetes / corporate network. See **`docs/client-prometheus-kubernetes.md`** for connectivity options and a joint checklist.
+Grafana runs in **your** AWS VPC. Client Prometheus runs in **their** Kubernetes / corporate network. For the common case where the client keeps their own Grafana and you host yours for your ops, see **`docs/dual-grafana-model.md`**. For connectivity, see **`docs/client-prometheus-kubernetes.md`**.
 
 ## Tooling responsibilities
 
