@@ -2,3 +2,4 @@
 grafana_admin_user: admin
 grafana_rds_port: 5432
 grafana_rds_ssl_mode: require
+grafana_dashboards_src: "/opt/grafana-platform/grafana/dashboards"

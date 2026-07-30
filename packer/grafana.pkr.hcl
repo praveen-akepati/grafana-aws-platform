@@ -57,10 +57,17 @@ build {
     destination = "/tmp/ansible"
   }
 
+  provisioner "file" {
+    source      = "../grafana"
+    destination = "/tmp/grafana"
+  }
+
   provisioner "shell" {
     inline = [
+      "sudo mkdir -p /opt/grafana-platform",
       "sudo mv /tmp/ansible /opt/grafana-platform/ansible",
-      "sudo chown -R root:root /opt/grafana-platform/ansible",
+      "sudo mv /tmp/grafana /opt/grafana-platform/grafana",
+      "sudo chown -R root:root /opt/grafana-platform/ansible /opt/grafana-platform/grafana",
     ]
   }
 }

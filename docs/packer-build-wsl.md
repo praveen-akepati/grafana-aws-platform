@@ -26,7 +26,7 @@ Build takes about **15–25 minutes** (temporary builder EC2 + AMI wait). Cost i
 ## What the template does
 
 1. **Shell provisioner** (as root): install Grafana, CloudWatch agent (`.deb`), `awscli`, `boto3`; leave `grafana-server` disabled until Ansible configures it
-2. **File provisioner**: copy `ansible/` to `/opt/grafana-platform/ansible` on the image
+2. **File provisioner**: copy `ansible/` and `grafana/` (dashboard Git tree) to `/opt/grafana-platform/` on the image
 3. **No Ansible provisioner** during Packer — runtime config runs on EC2 via **user_data** (`configure-grafana.yml`)
 
 ## Success output
