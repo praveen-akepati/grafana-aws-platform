@@ -42,7 +42,7 @@ For **work production**, set `poc_mode = false` before apply so RDS protection, 
 |---------|--------|
 | 502 from ALB | Target group health, `/var/log/grafana-bootstrap.log` on instances |
 | DB errors | RDS security group, credentials in Secrets Manager |
-| No Prometheus data | Connectivity to client URL, firewall/VPN routes |
+| No Prometheus data | `docs/client-prometheus-kubernetes.md` — VPN/routes, client Ingress allowlist (NAT EIPs), auth headers; test `curl` from Grafana EC2 |
 
 ## Alarms
 

@@ -5,8 +5,10 @@
 ```
 Users → Route 53 → ALB (HTTPS:443) → Grafana EC2 (:3000) → RDS PostgreSQL
                                               ↓
-                                    Client Prometheus (VPN or HTTPS)
+                         Client Prometheus (K8s, client network — VPN or HTTPS)
 ```
+
+Grafana runs in **your** AWS VPC. Client Prometheus runs in **their** Kubernetes / corporate network. See **`docs/client-prometheus-kubernetes.md`** for connectivity options and a joint checklist.
 
 ## Tooling responsibilities
 
@@ -29,4 +31,4 @@ Users → Route 53 → ALB (HTTPS:443) → Grafana EC2 (:3000) → RDS PostgreSQ
 
 ## Optional VPN add-on
 
-Uncomment `module "vpn"` in `terraform/environments/prod/main.tf` and set customer gateway IP and CIDR when the client selects site-to-site VPN.
+For private access to client Prometheus (recommended when metrics stay off the public internet), enable `module "vpn"` in `terraform/environments/prod/main.tf` using `terraform/modules/vpn`. See **`docs/client-prometheus-kubernetes.md`**.

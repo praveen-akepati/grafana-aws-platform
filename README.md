@@ -12,16 +12,16 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
 | `packer/` | Build Grafana base AMI (includes baked-in Ansible) |
 | `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), client Prometheus K8s (prod) |
 
 ## Prerequisites
 
 - AWS CLI configured with appropriate credentials
 - Terraform >= 1.5
-- Packer >= 1.9
-- Ansible collections in **WSL** (for optional manual `configure-grafana.yml`; EC2 bootstrap uses Ansible on the instance)
+- Packer >= 1.9 (build AMI from WSL — see `docs/packer-build-wsl.md`)
+- Ansible collections in **WSL** (optional manual playbooks; EC2 bootstrap uses Ansible on the instance)
 
-See `docs/setup-windows-tools.md` and `docs/local-prometheus-before-aws.md` before deploy.
+See `docs/setup-windows-tools.md` and `docs/local-prometheus-before-aws.md` for POC. For production client Prometheus on Kubernetes, see **`docs/client-prometheus-kubernetes.md`**.
 
 ## Deploy order
 
@@ -94,7 +94,7 @@ With `poc_mode = true`, `terraform destroy` in `terraform/environments/prod` rem
 
 Before go-live, confirm with the client:
 
-- Prometheus connectivity (VPN module in `terraform/modules/vpn` vs HTTPS whitelist)
+- Prometheus connectivity — **`docs/client-prometheus-kubernetes.md`** (VPN, HTTPS allowlist, client K8s Ingress)
 - DNS ownership and domain
 - Authentication (LDAP/SSO — extend Ansible role)
 - SNS email for alarms (`sns_topic_email` in monitoring module)

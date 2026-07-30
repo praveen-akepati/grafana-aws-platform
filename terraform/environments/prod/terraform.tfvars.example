@@ -17,7 +17,7 @@ instance_type = "t3.medium"
 # Replace with your public IP /32 (e.g. from https://ifconfig.me) so only you can reach the ALB
 allowed_ingress_cidrs = ["203.0.113.50/32"]
 
-# Optional; set to your ngrok/cloudflared URL when Prometheus is reachable from the VPC
+# POC: ngrok/cloudflared URL. Production: client K8s URL (see docs/client-prometheus-kubernetes.md).
 prometheus_url = ""
 
 # POC / personal test: true (clean terraform destroy). Work production: false.
