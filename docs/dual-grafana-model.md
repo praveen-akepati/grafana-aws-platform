@@ -63,7 +63,7 @@ They usually **already have** Prometheus and internal DNS/Ingress. You need **in
 
 1. Deploy this stack (`README.md` deploy order).
 2. Connect Prometheus datasource (`prometheus_url` + auth if needed).
-3. Onboard **your** users and build **your** dashboards.
+3. Onboard **your** users and sync dashboards from **`grafana/dashboards/`** (`docs/grafana-gitops.md`).
 4. Restrict ALB ingress (`allowed_ingress_cidrs`) to **your** networks.
 5. Operate HA Grafana (AMI updates, backups, `poc_mode = false` in production).
 
@@ -73,6 +73,7 @@ They usually **already have** Prometheus and internal DNS/Ingress. You need **in
 |-----|--------|
 | `docs/client-prometheus-kubernetes.md` | VPN, hostname, auth, operational stability |
 | `docs/grafana-users.md` | Users and access on **your** Grafana |
+| `docs/grafana-gitops.md` | Dashboards in Git (`grafana/dashboards/`) |
 | `docs/architecture.md` | AWS components and traffic flow |
 | `docs/runbook.md` | Day-2 operations and teardown |
 

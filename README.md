@@ -10,9 +10,10 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 |------|---------|
 | `terraform/environments/prod` | Root stack for production |
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
-| `packer/` | Build Grafana base AMI (includes baked-in Ansible) |
-| `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), [dual Grafana model](docs/dual-grafana-model.md), client Prometheus (K8s) |
+| `packer/` | Build Grafana base AMI (Ansible + dashboard tree on image) |
+| `ansible/` | Configure DB, admin, Prometheus datasource, dashboard sync |
+| `grafana/dashboards/` | **Git source of truth** for dashboard JSON (`client-imported/`, `our-ops/`) |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), [dual Grafana model](docs/dual-grafana-model.md), [dashboard GitOps](docs/grafana-gitops.md), client Prometheus (K8s) |
 
 ## Prerequisites
 
@@ -85,6 +86,15 @@ ansible-playbook playbooks/configure-grafana.yml -i inventory/aws_ec2.yml \
 - User data runs Ansible from AMI on scale-out
 
 For **work production**, set `poc_mode = false` in `terraform.tfvars` before apply (enables RDS deletion protection, final snapshot, backups, and secret recovery window).
+
+## Grafana dashboards (Git)
+
+Dashboard JSON lives in **`grafana/dashboards/`** — same repo, separate folder from Terraform/Ansible:
+
+- **`client-imported/`** — adapt the client's existing dashboards (clusters, apps) as a starting point
+- **`our-ops/`** — dashboards your team adds
+
+See **`docs/grafana-gitops.md`** for import steps, datasource retargeting, and deploy workflow.
 
 ## Tear down (POC)
 

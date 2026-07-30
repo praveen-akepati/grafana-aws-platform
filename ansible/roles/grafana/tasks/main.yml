@@ -31,6 +31,46 @@
     mode: "0640"
   notify: Restart grafana
 
+- name: Ensure Grafana dashboard directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: "0755"
+  loop:
+    - /etc/grafana/dashboards
+    - /etc/grafana/provisioning/dashboards
+
+- name: Install dashboard provisioning provider from Git
+  ansible.builtin.copy:
+    src: "{{ grafana_dashboards_src }}/provisioning/dashboards.yml"
+    dest: /etc/grafana/provisioning/dashboards/git-dashboards.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Sync client-imported dashboards from Git
+  ansible.builtin.copy:
+    src: "{{ grafana_dashboards_src }}/client-imported/"
+    dest: /etc/grafana/dashboards/client-imported/
+    owner: grafana
+    group: grafana
+    mode: "0644"
+    directory_mode: "0755"
+  notify: Restart grafana
+
+- name: Sync our-ops dashboards from Git
+  ansible.builtin.copy:
+    src: "{{ grafana_dashboards_src }}/our-ops/"
+    dest: /etc/grafana/dashboards/our-ops/
+    owner: grafana
+    group: grafana
+    mode: "0644"
+    directory_mode: "0755"
+  notify: Restart grafana
+
 - name: Ensure Grafana is started
   ansible.builtin.service:
     name: grafana-server
