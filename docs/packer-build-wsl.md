@@ -4,11 +4,11 @@ Packer **only creates a Grafana golden AMI**. It does **not** deploy VPC, ALB, R
 
 ## Prerequisites
 
-- WSL Ubuntu with **AWS CLI**, **Packer**, and credentials for profile `praveen_iam`
-- Region: **ap-south-1**
+- WSL Ubuntu with **AWS CLI**, **Packer**, and AWS credentials configured
+- Region: match your `terraform.tfvars` (default **ap-south-1**)
 
 ```bash
-export AWS_PROFILE=praveen_iam
+export AWS_PROFILE=your-aws-profile
 export AWS_DEFAULT_REGION=ap-south-1
 aws sts get-caller-identity
 ```
@@ -16,16 +16,16 @@ aws sts get-caller-identity
 ## Build
 
 ```bash
-cd /mnt/c/Users/USER/grafana-aws-platform/packer
+cd /mnt/c/path/to/grafana-aws-platform/packer
 packer init grafana.pkr.hcl
-packer build -var region=ap-south-1 grafana.pkr.hcl
+packer build -var region=ap-south-1
 ```
 
 Build takes about **15–25 minutes** (temporary builder EC2 + AMI wait). Cost is usually **cents to low dollars**.
 
 ## What the template does
 
-1. **Shell provisioner** (as root): install Grafana, CloudWatch agent (`.deb`), `awscli`, `boto3`; enable `grafana-server`
+1. **Shell provisioner** (as root): install Grafana, CloudWatch agent (`.deb`), `awscli`, `boto3`; leave `grafana-server` disabled until Ansible configures it
 2. **File provisioner**: copy `ansible/` to `/opt/grafana-platform/ansible` on the image
 3. **No Ansible provisioner** during Packer — runtime config runs on EC2 via **user_data** (`configure-grafana.yml`)
 

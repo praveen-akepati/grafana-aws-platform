@@ -38,7 +38,7 @@ See `terraform/backend.tf.example` for S3 + DynamoDB setup.
 See `docs/packer-build-wsl.md`.
 
 ```bash
-cd /mnt/c/Users/USER/grafana-aws-platform/packer
+cd /path/to/grafana-aws-platform/packer
 packer init grafana.pkr.hcl
 packer build -var region=ap-south-1 grafana.pkr.hcl
 ```

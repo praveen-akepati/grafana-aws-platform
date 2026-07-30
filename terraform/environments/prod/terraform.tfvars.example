@@ -14,10 +14,10 @@ grafana_ami_id = "ami-0123456789abcdef0"
 
 instance_type = "t3.medium"
 
-# Your public IP /32 so only you can reach the ALB (update if your ISP changes your IP)
-allowed_ingress_cidrs = ["49.43.218.88/32"]
+# Replace with your public IP /32 (e.g. from https://ifconfig.me) so only you can reach the ALB
+allowed_ingress_cidrs = ["203.0.113.50/32"]
 
-# Optional; leave empty until Prometheus is reachable from the VPC
+# Optional; set to your ngrok/cloudflared URL when Prometheus is reachable from the VPC
 prometheus_url = ""
 
 # POC / personal test: true (clean terraform destroy). Work production: false.
