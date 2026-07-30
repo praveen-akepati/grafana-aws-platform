@@ -1,4 +1,4 @@
-terraform {
+﻿terraform {
   required_version = ">= 1.5.0"
 
   required_providers {
@@ -29,6 +29,9 @@ locals {
   name_prefix = "${var.project_name}-${var.environment}"
 
   grafana_root_url = var.use_custom_domain ? "https://${var.domain_name}" : "http://${module.alb.dns_name}"
+
+  # Production: block accidental terraform destroy on data-critical resources.
+  destroy_protection = coalesce(var.enable_destroy_protection, !var.poc_mode)
 }
 
 check "custom_domain_inputs" {
@@ -38,6 +41,29 @@ check "custom_domain_inputs" {
       || (var.domain_name != null && var.domain_name != "" && var.hosted_zone_id != null && var.hosted_zone_id != "")
     )
     error_message = "Set domain_name and hosted_zone_id when use_custom_domain is true."
+  }
+}
+
+check "client_vpn_inputs" {
+  assert {
+    condition = (
+      !var.enable_client_vpn
+      || (var.customer_gateway_ip != null && var.customer_gateway_ip != "" && var.customer_network_cidr != null && var.customer_network_cidr != "")
+    )
+    error_message = "Set customer_gateway_ip and customer_network_cidr when enable_client_vpn is true."
+  }
+}
+
+# Blocks accidental `terraform destroy` in production. Removed when destroy_protection is false.
+resource "terraform_data" "destroy_guard" {
+  count = local.destroy_protection ? 1 : 0
+
+  input = {
+    message = "Set poc_mode = true and enable_destroy_protection = false, then terraform apply, before terraform destroy."
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -150,4 +176,16 @@ module "monitoring" {
   target_group_arn_suffix = module.alb.target_group_arn_suffix
   rds_instance_id         = module.rds.instance_id
   sns_topic_email         = null
+}
+
+# Site-to-site VPN to client network (for private Prometheus). See docs/client-prometheus-kubernetes.md
+module "vpn" {
+  count  = var.enable_client_vpn ? 1 : 0
+  source = "../../modules/vpn"
+
+  name_prefix             = local.name_prefix
+  vpc_id                  = module.vpc.vpc_id
+  private_route_table_ids = module.vpc.private_route_table_ids
+  customer_gateway_ip     = var.customer_gateway_ip
+  customer_network_cidr   = var.customer_network_cidr
 }

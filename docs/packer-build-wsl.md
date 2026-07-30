@@ -16,9 +16,9 @@ aws sts get-caller-identity
 ## Build
 
 ```bash
-cd /mnt/c/path/to/grafana-aws-platform/packer
+cd /path/to/grafana-aws-platform/packer
 packer init grafana.pkr.hcl
-packer build -var region=ap-south-1
+packer build -var region=ap-south-1 grafana.pkr.hcl
 ```
 
 Build takes about **15–25 minutes** (temporary builder EC2 + AMI wait). Cost is usually **cents to low dollars**.

@@ -134,3 +134,12 @@ output "private_subnet_ids" {
 output "private_route_table_ids" {
   value = [aws_route_table.private.id]
 }
+
+output "vpc_cidr" {
+  value = var.vpc_cidr
+}
+
+output "nat_gateway_public_ip" {
+  description = "Public IP used for outbound traffic from private subnets (NAT Gateway)."
+  value       = aws_eip.nat.public_ip
+}

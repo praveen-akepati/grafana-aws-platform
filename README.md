@@ -13,22 +13,26 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `packer/` | Build Grafana base AMI (Ansible + dashboard tree on image) |
 | `ansible/` | Configure DB, admin, Prometheus datasource, dashboard sync |
 | `grafana/dashboards/` | **Git source of truth** for dashboard JSON (`client-imported/`, `our-ops/`) |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), [dual Grafana model](docs/dual-grafana-model.md), [dashboard GitOps](docs/grafana-gitops.md), client Prometheus (K8s) |
+| `docs/` | **[Deploy guide](docs/deploy-guide.md)**, architecture, runbook, Windows tools, local Prometheus (POC), [dual Grafana](docs/dual-grafana-model.md), [dashboard GitOps](docs/grafana-gitops.md), client Prometheus |
 
 ## Prerequisites
+
+See **`docs/setup-windows-tools.md`** for Windows + WSL install and AWS profile setup.
 
 - AWS CLI configured with appropriate credentials
 - Terraform >= 1.5
 - Packer >= 1.9 (build AMI from WSL — see `docs/packer-build-wsl.md`)
 - Ansible collections in **WSL** (optional manual playbooks; EC2 bootstrap uses Ansible on the instance)
 
-See `docs/setup-windows-tools.md` and `docs/local-prometheus-before-aws.md` for POC. For production client Prometheus on Kubernetes, see **`docs/client-prometheus-kubernetes.md`**.
+See `docs/local-prometheus-before-aws.md` for POC. For production client Prometheus on Kubernetes, see **`docs/client-prometheus-kubernetes.md`**.
 
 ## Deploy order
 
 ### 0. Local Prometheus + ngrok (POC)
 
 See `docs/local-prometheus-before-aws.md`. Confirm tunnel with `ngrok-skip-browser-warning` header if using ngrok free tier.
+
+Production go-live checklist: **`docs/deploy-guide.md`** (on `main` workflow).
 
 ### 1. Bootstrap remote state (once per org)
 
@@ -63,6 +67,8 @@ terraform plan
 terraform apply
 ```
 
+Open `terraform output grafana_url` after apply. Log in with the admin user from Secrets Manager — see **`docs/grafana-users.md`**.
+
 ### 5. Configure Grafana (optional if user_data succeeded)
 
 ```bash
@@ -77,24 +83,29 @@ ansible-playbook playbooks/configure-grafana.yml -i inventory/aws_ec2.yml \
 
 ## Production enhancements included
 
-- S3 logging bucket (ALB access logs, VPC flow logs)
+- S3 logging bucket (ALB access logs, VPC flow logs) with delivery policies
 - CloudWatch alarms (ALB 5xx, unhealthy targets, RDS CPU)
-- RDS encryption, Multi-AZ, backup retention
+- RDS encryption, Multi-AZ, backup retention (when `poc_mode = false`)
+- Terraform **destroy guard** (`terraform_data.destroy_guard`) when `poc_mode = false`
 - IMDSv2 required on EC2
 - Secrets Manager for credentials
 - ASG CPU target tracking (min 2 / max 5)
-- User data runs Ansible from AMI on scale-out
+- User data runs Ansible from AMI on scale-out (including Galaxy collections)
 
-For **work production**, set `poc_mode = false` in `terraform.tfvars` before apply (enables RDS deletion protection, final snapshot, backups, and secret recovery window).
+Set `poc_mode = false` in `terraform.tfvars` before a real production apply. See `docs/runbook.md`.
 
 ## Grafana dashboards (Git)
 
-Dashboard JSON lives in **`grafana/dashboards/`** — same repo, separate folder from Terraform/Ansible:
+Dashboard JSON lives in **`grafana/dashboards/`**:
 
 - **`client-imported/`** — adapt the client's existing dashboards (clusters, apps) as a starting point
 - **`our-ops/`** — dashboards your team adds
 
-See **`docs/grafana-gitops.md`** for import steps, datasource retargeting, and deploy workflow.
+See **`docs/grafana-gitops.md`** for import steps and weekly UI → Git sync.
+
+## Grafana users
+
+See **`docs/grafana-users.md`** — bootstrap admin from Secrets Manager, UI invites, API.
 
 ## Tear down (POC)
 
@@ -110,7 +121,7 @@ Before go-live, confirm with the client:
 
 - Prometheus connectivity — **`docs/client-prometheus-kubernetes.md`** (VPN, HTTPS allowlist, client K8s Ingress)
 - DNS ownership and domain
-- Authentication (LDAP/SSO — extend Ansible role)
+- Grafana users and SSO (`docs/grafana-users.md` — LDAP/OAuth extension)
 - SNS email for alarms (`sns_topic_email` in monitoring module)
 
 ## License

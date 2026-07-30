@@ -68,8 +68,8 @@ resource "aws_db_instance" "this" {
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  backup_retention_period = var.backup_retention_days
-  skip_final_snapshot     = var.poc_mode
+  backup_retention_period   = var.backup_retention_days
+  skip_final_snapshot       = var.poc_mode
   final_snapshot_identifier = var.poc_mode ? null : "${var.name_prefix}-final-snapshot"
 
   deletion_protection = !var.poc_mode

@@ -31,7 +31,7 @@ variable "hosted_zone_id" {
 }
 
 variable "use_custom_domain" {
-  description = "When false (POC default), use ALB DNS over HTTP only — no Route 53 or ACM."
+  description = "When false (POC default), use ALB DNS over HTTP only — no Route 53 or ACM. When true, Route 53 + ACM HTTPS."
   type        = bool
   default     = false
 }
@@ -115,4 +115,31 @@ variable "poc_mode" {
   description = "POC/sandbox: RDS destroy without protection or final snapshot, S3 force_destroy, secrets delete immediately. Set false for real production."
   type        = bool
   default     = true
+}
+
+variable "enable_destroy_protection" {
+  description = "When true, Terraform blocks destroy on RDS, Secrets Manager, and logs S3 until set false. Defaults to true when poc_mode is false."
+  type        = bool
+  default     = null
+  nullable    = true
+}
+
+variable "enable_client_vpn" {
+  description = "Enable site-to-site VPN to the client network for private Prometheus access."
+  type        = bool
+  default     = false
+}
+
+variable "customer_gateway_ip" {
+  description = "Client VPN endpoint public IP. Required when enable_client_vpn is true."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "customer_network_cidr" {
+  description = "Client network CIDR reachable over VPN (e.g. 172.16.0.0/12). Required when enable_client_vpn is true."
+  type        = string
+  default     = null
+  nullable    = true
 }

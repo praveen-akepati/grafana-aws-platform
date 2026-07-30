@@ -38,7 +38,7 @@ resource "aws_vpn_connection" "this" {
 
 resource "aws_vpn_connection_route" "customer" {
   destination_cidr_block = var.customer_network_cidr
-  vpn_connection_id      = aws_vpn_connection.id
+  vpn_connection_id      = aws_vpn_connection.this.id
 }
 
 resource "aws_route" "private_to_customer" {

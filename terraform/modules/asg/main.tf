@@ -127,10 +127,10 @@ resource "aws_launch_template" "grafana" {
 }
 
 resource "aws_autoscaling_group" "grafana" {
-  name_prefix         = "${var.name_prefix}-"
-  vpc_zone_identifier = var.private_subnet_ids
-  target_group_arns   = [var.target_group_arn]
-  health_check_type   = "ELB"
+  name_prefix               = "${var.name_prefix}-"
+  vpc_zone_identifier       = var.private_subnet_ids
+  target_group_arns         = [var.target_group_arn]
+  health_check_type         = "ELB"
   health_check_grace_period = 300
 
   min_size         = var.min_size
