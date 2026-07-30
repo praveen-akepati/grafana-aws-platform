@@ -12,7 +12,7 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
 | `packer/` | Build Grafana base AMI (Ansible copied to image; configured at launch) |
 | `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), Grafana users |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), Grafana users, client Prometheus (K8s) |
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ See **`docs/setup-windows-tools.md`** for Windows + WSL install and AWS profile 
 - Packer >= 1.9 (build AMI from WSL — see `docs/packer-build-wsl.md`)
 - WSL 2 + Ubuntu (Packer builds; optional Ansible for manual playbooks)
 - Route 53 hosted zone and domain when `use_custom_domain = true` (default)
-- Client Prometheus URL **optional** — set `prometheus_url` in `terraform.tfvars` only when the client metrics endpoint is reachable from the VPC
+- Client Prometheus URL **optional** — set `prometheus_url` when the client endpoint is reachable from your VPC; see **`docs/client-prometheus-kubernetes.md`**
 
 ## Deploy order
 
@@ -102,7 +102,7 @@ With `poc_mode = true`, `terraform destroy` in `terraform/environments/prod` rem
 
 Before go-live, confirm with the client:
 
-- Prometheus connectivity (VPN module in `terraform/modules/vpn` vs HTTPS whitelist)
+- Prometheus connectivity — **`docs/client-prometheus-kubernetes.md`** (VPN, HTTPS allowlist, client K8s Ingress)
 - DNS ownership and domain
 - Grafana users and SSO (`docs/grafana-users.md` — LDAP/OAuth extension)
 - SNS email for alarms (`sns_topic_email` in monitoring module)

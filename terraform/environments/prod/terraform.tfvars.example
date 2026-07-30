@@ -15,8 +15,7 @@ instance_type = "t3.medium"
 # Restrict ALB to client office/VPN or known public IPs (CIDR notation).
 allowed_ingress_cidrs = ["203.0.113.0/24"]
 
-# Optional. Client Prometheus base URL when reachable from the VPC (VPN or HTTPS).
-# Leave empty to configure the datasource later in Grafana or via Ansible.
+# Optional. Client Prometheus base URL — must be reachable from Grafana EC2 (see docs/client-prometheus-kubernetes.md).
 prometheus_url = ""
 
 # Production: false (RDS protection, backups, snapshots, destroy guardrails). Sandbox/POC: true.
