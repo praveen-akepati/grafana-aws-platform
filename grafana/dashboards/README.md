@@ -40,7 +40,7 @@ Subdirectories under `client-imported/` and `our-ops/` become **Grafana folders*
 
 4. Commit to Git → rebuild AMI or re-run `configure-grafana.yml` / replace ASG instances.
 
-See **`docs/grafana-gitops.md`** for the full workflow.
+**Day-to-day:** edit in the Grafana UI (`allowUiUpdates: true`). **Weekly:** export JSON back to this folder so Git stays in sync — see **`docs/grafana-gitops.md`** (recommended workflow).
 
 ## Add your own dashboards
 

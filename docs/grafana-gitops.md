@@ -27,16 +27,89 @@ Subfolders become Grafana folders automatically (e.g. `client-imported/prod-clus
    - JSON trees → `/etc/grafana/dashboards/`
 3. Grafana reloads provisioning (restart or `updateIntervalSeconds: 30`).
 
-## Workflow (day to day)
+## Recommended workflow: UI edits + weekly Git sync
+
+**Default for this project:** keep `allowUiUpdates: true` in `grafana/dashboards/provisioning/dashboards.yml`.
+
+| Layer | Role |
+|-------|------|
+| **Grafana UI** | Day-to-day — add panels, tweak queries, fix layouts |
+| **Git (`grafana/dashboards/`)** | Weekly (or after major changes) — export from UI so Git matches production |
+| **File provisioning** | Loads Git dashboards on **new instances** and after Ansible sync |
+
+```text
+Mon–Fri:   edit dashboards in the UI
+Weekly:    export JSON from UI → commit to grafana/dashboards/
+Deploy:    Git → instances (Ansible / new AMI / instance refresh)
+```
+
+Sync direction is **Grafana UI → Git**, not the other way around for routine updates. Ansible and provisioning push **Git → Grafana** when you deploy or replace instances.
+
+### Why weekly export matters (RDS)
+
+Grafana stores dashboards in **RDS PostgreSQL**. UI saves go to the database. Files under `grafana/dashboards/` are loaded via provisioning on bootstrap.
+
+Without periodic export, **Git can fall behind** what operators see in the UI. Weekly export keeps Git aligned for:
+
+- Version history and review
+- New ASG instances and disaster recovery
+- Sharing the same dashboards across environments
+
+### Weekly sync checklist
+
+1. List dashboards **created or edited** since the last sync (ask the team in standup or a shared channel).
+2. For each dashboard:
+   - Open in Grafana → **Dashboard settings** → **JSON Model** (copy), or **Share → Export → Save to file**.
+3. Save to the correct repo path:
+   - Client-based → `grafana/dashboards/client-imported/<cluster-or-app>/<name>.json`
+   - Your team's → `grafana/dashboards/our-ops/<name>.json`
+   - **New** dashboards that exist only in the UI must be exported as **new** `.json` files.
+4. Before commit:
+   - Datasource references point to **Client Prometheus**
+   - No secrets or API keys in JSON
+   - Filename describes the dashboard clearly
+5. Commit and push, e.g. `chore(grafana): weekly dashboard sync 2026-07-30`.
+6. **Optional:** re-run `configure-grafana.yml` if you need files on disk to match Git immediately on all nodes.
+
+**Cadence:** weekly is enough for many teams; export sooner after large changes or before an AMI refresh.
+
+### Adding panels after initial import
+
+Panels live **inside** each dashboard `.json` file (there is no separate panel file).
+
+1. Add or edit panels in the UI during the week.
+2. On sync day, **re-export the whole dashboard** and overwrite the matching file in Git.
+3. Do not rely on UI-only changes without export — they are in RDS but missing from Git until you sync.
+
+### Risks to avoid
+
+| Risk | Mitigation |
+|------|------------|
+| UI changes never exported | Weekly reminder; export after significant edits |
+| Two people edit the same dashboard | Own folders per team; use PRs for weekly sync |
+| New dashboard only in UI | Export the same week |
+| Broken datasource after export | Fix UID to **Client Prometheus**, re-export once |
+
+### Evolution
+
+| Stage | Practice |
+|-------|----------|
+| **Now** | `allowUiUpdates: true` + weekly UI → Git export |
+| **Later** | Export after each material change; optional API/script to open a PR |
+| **Mature** | `allowUiUpdates: false` and every change via Git PR (stricter GitOps) |
+
+## Workflow (strict Git-only alternative)
 
 ```text
 Edit JSON in grafana/dashboards/ → PR / review → merge to main
     → re-run Ansible on instances OR new AMI + ASG instance refresh
 ```
 
+Use this when `allowUiUpdates: false` or for teams that prefer never editing in the UI.
+
 Same outcome as the client's Argo CD sync, but the deploy mechanism is **Ansible/CI** because Grafana runs on **EC2**, not Kubernetes.
 
-### Strict Git-only (optional, production)
+### Strict Git-only (`allowUiUpdates: false`)
 
 In `grafana/dashboards/provisioning/dashboards.yml`, set:
 
