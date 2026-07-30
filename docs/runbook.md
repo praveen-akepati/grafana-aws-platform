@@ -11,6 +11,8 @@
 1. Update secret in AWS Secrets Manager (`grafana_admin_password`)
 2. Run `configure-grafana.yml` against instances or replace instances in ASG
 
+See `docs/grafana-users.md` for adding non-admin users.
+
 ## Scale manually
 
 ```bash
@@ -19,22 +21,49 @@ aws autoscaling set-desired-capacity \
   --desired-capacity 3
 ```
 
-## Tear down (POC)
+## Tear down (POC / sandbox)
 
-With `poc_mode = true` in `terraform.tfvars` (default in the example file):
+With `poc_mode = true` in `terraform.tfvars`:
 
 - RDS: no deletion protection, no final snapshot, backups disabled (`backup_retention_period = 0`)
 - Logs S3 bucket: `force_destroy` so objects do not block destroy
 - Secrets Manager: immediate delete (`recovery_window_in_days = 0`)
+- Terraform `lifecycle prevent_destroy` disabled on RDS, secrets, and logs bucket
 
 ```bash
 cd terraform/environments/prod
 terraform destroy
 ```
 
-After destroy, confirm in the AWS console that EC2, RDS, NAT Gateway, ALB, and VPC are gone. Route 53 records and ACM certs created by this stack are removed with Terraform; **hosted zones and domains you own elsewhere are not deleted.**
+## Tear down (production — intentional only)
 
-For **work production**, set `poc_mode = false` before apply so RDS protection, snapshots, and secret recovery match prod policy.
+Production uses **two layers** against accidental deletion:
+
+| Layer | What it does |
+|-------|----------------|
+| **Terraform** | `terraform_data.destroy_guard` with `prevent_destroy` when `destroy_protection` is enabled |
+| **AWS** | RDS `deletion_protection`; logs S3 without `force_destroy`; secrets 7-day recovery window |
+
+Check current state:
+
+```bash
+terraform output destroy_protection_enabled
+```
+
+To remove the stack **on purpose**:
+
+1. In `terraform.tfvars`, set:
+   ```hcl
+   poc_mode                  = true
+   enable_destroy_protection = false
+   ```
+2. `terraform apply` — disables AWS/Terraform guards (required before destroy).
+3. `terraform destroy`
+4. Confirm in the AWS console that EC2, RDS, NAT Gateway, ALB, and VPC are gone.
+
+Route 53 records and ACM certs created by this stack are removed with Terraform; **hosted zones and domains you own elsewhere are not deleted.**
+
+For **work production**, keep `poc_mode = false` (and leave `enable_destroy_protection` unset or `true`) so RDS protection, snapshots, secret recovery, and destroy guardrails stay active.
 
 ## Common checks
 

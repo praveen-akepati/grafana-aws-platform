@@ -7,18 +7,20 @@ use_custom_domain = true
 domain_name       = "grafana.example.com"
 hosted_zone_id    = "Z0123456789ABCDEFGHIJ"
 
-# POC without a domain: set use_custom_domain = false (no Route 53 / ACM).
-# See branch cursor/poc-alb-dns-no-domain for local Prometheus + ngrok walkthrough.
-
 # Set after: packer build -var region=ap-south-1
 grafana_ami_id = "ami-0123456789abcdef0"
 
 instance_type = "t3.medium"
 
-# Restrict ALB to client networks when known
+# Restrict ALB to client office/VPN or known public IPs (CIDR notation).
 allowed_ingress_cidrs = ["203.0.113.0/24"]
 
-prometheus_url = "https://prometheus.client.example.com"
+# Optional. Client Prometheus base URL when reachable from the VPC (VPN or HTTPS).
+# Leave empty to configure the datasource later in Grafana or via Ansible.
+prometheus_url = ""
 
-# POC / personal test: true (clean terraform destroy). Work production: false.
+# Production: false (RDS protection, backups, snapshots, destroy guardrails). Sandbox/POC: true.
 poc_mode = false
+
+# Optional override. When null, matches !poc_mode (on for production).
+# enable_destroy_protection = true

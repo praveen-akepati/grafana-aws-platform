@@ -114,5 +114,12 @@ variable "ansible_repo_url" {
 variable "poc_mode" {
   description = "POC/sandbox: RDS destroy without protection or final snapshot, S3 force_destroy, secrets delete immediately. Set false for real production."
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "enable_destroy_protection" {
+  description = "When true, Terraform blocks destroy on RDS, Secrets Manager, and logs S3 until set false. Defaults to true when poc_mode is false."
+  type        = bool
+  default     = null
+  nullable    = true
 }

@@ -12,14 +12,18 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
 | `packer/` | Build Grafana base AMI (Ansible copied to image; configured at launch) |
 | `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture, runbook, Packer (WSL) |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), Grafana users |
 
 ## Prerequisites
+
+See **`docs/setup-windows-tools.md`** for Windows + WSL install and AWS profile setup.
 
 - AWS CLI configured with appropriate credentials
 - Terraform >= 1.5
 - Packer >= 1.9 (build AMI from WSL — see `docs/packer-build-wsl.md`)
-- Ansible >= 2.14 on instances via user_data (`ansible-galaxy collection install` from baked-in `requirements.yml`)
+- WSL 2 + Ubuntu (Packer builds; optional Ansible for manual playbooks)
+- Route 53 hosted zone and domain when `use_custom_domain = true` (default)
+- Client Prometheus URL **optional** — set `prometheus_url` in `terraform.tfvars` only when the client metrics endpoint is reachable from the VPC
 
 ## Deploy order
 
@@ -43,11 +47,12 @@ Note the output AMI ID.
 
 ```bash
 cp terraform/environments/prod/terraform.tfvars.example terraform/environments/prod/terraform.tfvars
-# Edit domain_name, hosted_zone_id, grafana_ami_id, allowed_ingress_cidrs, prometheus_url
+# Edit domain_name, hosted_zone_id, grafana_ami_id, allowed_ingress_cidrs
+# Optional: prometheus_url when client metrics are reachable from AWS
 # Set poc_mode = false for real production
 ```
 
-Optional: `use_custom_domain = false` uses the ALB DNS name over HTTP (no Route 53). For a full personal POC (local Prometheus, ngrok), use branch `cursor/poc-alb-dns-no-domain`.
+Optional: `use_custom_domain = false` uses the ALB DNS name over HTTP (no Route 53).
 
 ### 4. Apply infrastructure
 
@@ -58,7 +63,7 @@ terraform plan
 terraform apply
 ```
 
-Open `terraform output grafana_url` after apply.
+Open `terraform output grafana_url` after apply. Log in with the admin user from Secrets Manager — see **`docs/grafana-users.md`**.
 
 ### 5. Configure Grafana (optional if user_data succeeded)
 
@@ -77,12 +82,17 @@ ansible-playbook playbooks/configure-grafana.yml -i inventory/aws_ec2.yml \
 - S3 logging bucket (ALB access logs, VPC flow logs) with delivery policies
 - CloudWatch alarms (ALB 5xx, unhealthy targets, RDS CPU)
 - RDS encryption, Multi-AZ, backup retention (when `poc_mode = false`)
+- Terraform **destroy guard** (`terraform_data.destroy_guard`) when `poc_mode = false`
 - IMDSv2 required on EC2
 - Secrets Manager for credentials
 - ASG CPU target tracking (min 2 / max 5)
 - User data runs Ansible from AMI on scale-out (including Galaxy collections)
 
-Set `poc_mode = false` in `terraform.tfvars` before a real production apply (RDS deletion protection, final snapshot, backups, secret recovery window).
+Set `poc_mode = false` in `terraform.tfvars` before a real production apply (RDS deletion protection, final snapshot, backups, secret recovery window, Terraform destroy guardrails). See `docs/runbook.md` for intentional production teardown.
+
+## Grafana users
+
+See **`docs/grafana-users.md`** — bootstrap admin from Secrets Manager, UI invites, API, and optional LDAP/OAuth.
 
 ## Tear down (sandbox)
 
@@ -94,7 +104,7 @@ Before go-live, confirm with the client:
 
 - Prometheus connectivity (VPN module in `terraform/modules/vpn` vs HTTPS whitelist)
 - DNS ownership and domain
-- Authentication (LDAP/SSO — extend Ansible role)
+- Grafana users and SSO (`docs/grafana-users.md` — LDAP/OAuth extension)
 - SNS email for alarms (`sns_topic_email` in monitoring module)
 
 ## License

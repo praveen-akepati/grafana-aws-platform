@@ -21,6 +21,11 @@ output "asg_name" {
   value = module.asg.asg_name
 }
 
+output "destroy_protection_enabled" {
+  description = "When true, terraform destroy is blocked on RDS, secrets, and logs S3 until protection is disabled."
+  value       = local.destroy_protection
+}
+
 output "private_subnet_ids" {
   value = module.vpc.private_subnet_ids
 }
