@@ -60,7 +60,7 @@ Use **HTTPS** and auth on the client endpoint when possible.
 
 ### Option B — Client Ingress over HTTPS + IP allowlist
 
-**Best when:** VPN is slow to approve, but the client accepts a **controlled public endpoint**.
+**Best when:** VPN is slow to approve as a **temporary** bridge — not ideal long term (see [Operational stability](#operational-stability-avoid-repeated-client-changes)).
 
 ```
 Grafana EC2 → NAT Gateway (fixed EIP) → Internet → Client Ingress → Prometheus
@@ -84,6 +84,44 @@ prometheus_url = "https://prometheus.client.example.com"
 ```
 
 If the client requires a custom header or bearer token, configure it in Grafana (**Connections → Data sources → HTTP headers**) or extend the Ansible `grafana_datasource` task with `json_data` / `secure_json_data`.
+
+---
+
+## Operational stability (avoid repeated client changes)
+
+You should **not** design production so every AWS tweak needs a client firewall ticket. Patterns ranked by how often the client must act:
+
+| Approach | Client changes when… | Recommended? |
+|----------|----------------------|--------------|
+| **Site-to-site VPN + allow VPC CIDR** | You change **VPC CIDR** or they renumber K8s (rare) | **Yes — preferred** |
+| **HTTPS + auth (token / mTLS)** | You rotate credentials (planned); IP can be secondary | **Yes — combine with VPN or as backup** |
+| **HTTPS + NAT EIP allowlist only** | NAT/EIP rebuild, new region, second NAT, full stack recreate | **Avoid as sole control** |
+
+### Why NAT EIP allowlists are brittle
+
+The stack already has **one Elastic IP** on the NAT Gateway. That IP is *usually* stable, but the client must be involved again if:
+
+- You **destroy and recreate** the Terraform stack (new EIP).
+- The **NAT Gateway or EIP** is replaced (incident, refactor, region move).
+- You add **another NAT** (multi-AZ egress) — more IPs to allowlist.
+- You run a **second environment** (staging Grafana) — more IPs or CIDRs.
+
+Grafana **ASG scale-out/in** does **not** change egress IP — all nodes use the same NAT. The problem is **infrastructure** changes, not day-to-day Grafana ops.
+
+### What to agree with the client up front
+
+1. **One-time VPN** (Option A): they allow your **`vpc_cidr`** (e.g. `10.0.0.0/16`) to reach Prometheus on an **internal hostname**. You change AMIs, instance count, or NAT without calling them.
+2. **Stable DNS**: `prometheus_url` is a **hostname** they control, not a raw IP that changes when pods move.
+3. **Authentication**: bearer token, basic auth, or mTLS on Prometheus/Ingress — so security does not depend only on IP.
+4. **Change window** (if you must use public IP allowlist): document that EIP changes are **exceptional** and need 48h notice — still worse than VPN.
+
+### Practical recommendation
+
+| Phase | Approach |
+|-------|----------|
+| **Production** | VPN + internal client URL + HTTPS/auth |
+| **Pilot only** | HTTPS + NAT EIP allowlist, with a plan to move to VPN |
+| **Never** | Rely on IP allowlist alone with no auth |
 
 ---
 
@@ -155,19 +193,20 @@ In **Explore**, run query `up`.
 
 ### Your company (Grafana host)
 
-- [ ] VPC CIDR and NAT Gateway EIP(s) documented for the client
+- [ ] Agree **VPN + VPC CIDR** access with client (preferred — one-time setup)
 - [ ] VPN module configured and routes propagated (if Option A)
-- [ ] `prometheus_url` set in `terraform.tfvars`
-- [ ] Confirm egress from private subnets (NAT or VPN) works
+- [ ] `prometheus_url` set to a **stable client hostname**
+- [ ] Confirm egress from private subnets (VPN or NAT) works
 - [ ] ALB access limited with `allowed_ingress_cidrs`
+- [ ] If using NAT EIP allowlist: document EIP and **change process** (interim only)
 
 ### Client company (Prometheus on K8s)
 
 - [ ] Prometheus URL stable (DNS or LB hostname)
-- [ ] Firewall / NetworkPolicy allows **your VPC CIDR or NAT EIPs**
-- [ ] TLS and authentication aligned with Grafana datasource settings
+- [ ] Firewall / NetworkPolicy allows **your VPC CIDR** (VPN) or NAT EIPs (pilot only)
+- [ ] TLS and **authentication** (not IP-only) on the Prometheus endpoint
 - [ ] Ingress/controller health checks pass for `/api/v1/query?query=up`
-- [ ] Named contact for network changes (NAT EIP change breaks allowlists)
+- [ ] Named contact only for **network/CIDR** changes, not for your routine Grafana scaling
 
 ## Security recommendations
 
