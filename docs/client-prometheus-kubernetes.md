@@ -2,6 +2,8 @@
 
 In production, **Grafana runs in your company’s AWS VPC** (this stack). **Prometheus runs in the client’s Kubernetes cluster** on their corporate network. The two networks do not share a LAN by default — you must design connectivity and security **before** go-live.
 
+> **Context:** If the client already has their own Grafana/dashboards and you are hosting **separate Grafana for your ops**, read **`docs/dual-grafana-model.md`** first.
+
 ## Who talks to whom
 
 ```

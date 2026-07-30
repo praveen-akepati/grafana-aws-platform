@@ -12,7 +12,7 @@ Based on the solution design: ALB + ASG (2–5 nodes) + RDS PostgreSQL Multi-AZ,
 | `terraform/modules/*` | VPC, ALB, ASG, RDS, DNS, secrets, logging, monitoring, VPN stub |
 | `packer/` | Build Grafana base AMI (includes baked-in Ansible) |
 | `ansible/` | Configure DB, admin, Prometheus datasource |
-| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), client Prometheus K8s (prod) |
+| `docs/` | Architecture, runbook, Windows tools, Packer (WSL), local Prometheus (POC), [dual Grafana model](docs/dual-grafana-model.md), client Prometheus (K8s) |
 
 ## Prerequisites
 
@@ -89,6 +89,10 @@ For **work production**, set `poc_mode = false` in `terraform.tfvars` before app
 ## Tear down (POC)
 
 With `poc_mode = true`, `terraform destroy` in `terraform/environments/prod` removes the stack without leaving RDS snapshots or a protected database. See `docs/runbook.md`.
+
+## Client engagement (metrics already at client)
+
+If the client **already has Prometheus and dashboards** but wants **your company** to run **your own Grafana** for your operations, start with **`docs/dual-grafana-model.md`**, then **`docs/client-prometheus-kubernetes.md`** for VPN and connectivity.
 
 ## Client open items
 
